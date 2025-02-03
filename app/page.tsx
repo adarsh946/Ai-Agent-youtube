@@ -2,6 +2,7 @@ import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
 import { ArrowRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { title } from "process";
 
 export default function LandingPage() {
   return (
@@ -46,6 +47,28 @@ export default function LandingPage() {
             </button>
           </SignInButton>
         </SignedOut>
+
+        {/* feature grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-16 pt-8 max-w-3xl mx-auto">
+          {[
+            {
+              title: "Fast",
+              description: "Real time Streamed Response",
+            },
+            {
+              title: "Modern",
+              description: "Next.js 15, Tailwind Css, Convex, Clerk",
+            },
+            { title: "Smart", description: "Powered by your favourite LLM's" },
+          ].map(({ title, description }) => (
+            <div key={title} className="text-center">
+              <div className="text-gray-900 font-semibold text-2xl">
+                {title}
+              </div>
+              <div className="text-sm text-gray-600 mt-1">{description}</div>
+            </div>
+          ))}
+        </div>
       </section>
     </main>
   );
