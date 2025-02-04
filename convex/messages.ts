@@ -64,12 +64,12 @@ export const getLastMessage = mutation({
       throw new Error("Unauthorised");
     }
 
-    const messages = await ctx.db
+    const lastMessage = await ctx.db
       .query("messages")
       .withIndex("by_chats", (q) => q.eq("chatId", args.chatId))
       .order("desc")
       .first();
 
-    return messages;
+    return lastMessage;
   },
 });
