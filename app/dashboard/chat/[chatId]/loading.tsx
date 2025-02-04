@@ -16,9 +16,27 @@ export default function () {
                       ? "bg-blue-600/10 rounded-br-none"
                       : "bg-white rounded-bl-none border border-gray-200"
                   }`}
-                ></div>
+                >
+                  <div className="space-y-3">
+                    <div
+                      className={`h-4 animate-pulse rounded w-[90%] ${i % 2 === 0 ? "bg-white/40" : "bg-gray-200"}`}
+                    />
+                    <div
+                      className={`h-4 animate-pulse rounded w-[75%] ${i % 2 === 0 ? "bg-white/40" : "bg-gray-200"}`}
+                    />
+                    <div
+                      className={`h-4 animate-pulse rounded w-[60%] ${i % 2 === 0 ? "bg-white/40" : "bg-gray-200"}`}
+                    />
+                  </div>
+                </div>
               </div>
             ))}
+          </div>
+        </div>
+
+        <div className="border-t bg-white p-4">
+          <div className="max-w-4xl mx-auto">
+            <div className="h-12 rounded-full bg-gray-100 animate-pulse" />
           </div>
         </div>
       </div>
