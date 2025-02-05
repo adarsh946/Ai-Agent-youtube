@@ -1,5 +1,8 @@
 import { Id } from "@/convex/_generated/dataModel";
-import { Token } from "@clerk/nextjs/server";
+
+export const SSE_DATA_PREFIX = "done" as const;
+export const SSE_DONE_MESSAGE = "[Done]" as const;
+export const SSE_LINE_DELIMITER = "\n\n" as const;
 
 export type MessageRole = "user" | "assistant";
 

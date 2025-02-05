@@ -4,7 +4,6 @@ import { Doc, Id } from "@/convex/_generated/dataModel";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "./ui/button";
 import { ArrowRight } from "lucide-react";
-import { Content } from "next/font/google";
 import { ChatRequestBody } from "@/lib/types";
 
 interface ChatInterfaceProps {
