@@ -1,6 +1,19 @@
 import { ChatOpenAI } from "@langchain/openai";
 import wxflows from "@wxflows/sdk/langchain";
 import { ToolNode } from "@langchain/langgraph/prebuilt";
+import {
+  END,
+  MessagesAnnotation,
+  START,
+  StateGraph,
+  StateGraph,
+} from "@langchain/langgraph";
+import { SystemMessage } from "@langchain/core/messages";
+import {
+  ChatPromptTemplate,
+  MessagesPlaceholder,
+} from "@langchain/core/prompts";
+import { cache } from "react";
 
 // Customers at :  https://introspection.apis.stepzen.com/customers
 // Comment at : https://dummyjson.com/comments
@@ -38,4 +51,24 @@ const initializeModel = () => {
   }).bindTools(tools);
 
   return chatModel;
+};
+
+const createWorkFlow = () => {
+  const model = initializeModel();
+
+  const stateGraph = new StateGraph(MessagesAnnotation).addNode(
+    "agent",
+    async (state) => {
+      //create system message content by prompt engineering
+      const systemContent = SYSTEM_MESSAGE;
+
+      //create the prompt template with system message and messages placeholder
+      const promptTemplate = ChatPromptTemplate.fromMessages([
+        new SystemMessage(systemContent, {
+          cache_control: { type: "ephemeral" }, // set a cache breakpoints (max breakpoint is 4)  (prompt caching is in anthropic but not sure in open ai)
+        }),
+        new MessagesPlaceholder("messages"),
+      ]);
+    }
+  );
 };
