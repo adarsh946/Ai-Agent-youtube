@@ -1,4 +1,5 @@
 import { Id } from "@/convex/_generated/dataModel";
+import { Token } from "@clerk/nextjs/server";
 
 export type MessageRole = "user" | "assistant";
 
@@ -12,3 +13,53 @@ export interface ChatRequestBody {
   chatId: Id<"chats">;
   messages: Message[];
 }
+export enum StreamMessageType {
+  Token = "token",
+  Error = "error",
+  Connected = "connected",
+  Done = "done",
+  ToolStart = "tool_start",
+  ToolEnd = "tool_end",
+}
+
+export interface BaseStreamMessage {
+  type: StreamMessageType;
+}
+
+export interface TokenMessage extends BaseStreamMessage {
+  type: StreamMessageType.Token;
+  token: string;
+}
+
+export interface ErrorMessage extends BaseStreamMessage {
+  type: StreamMessageType.Error;
+  error: string;
+}
+
+export interface ConnectedMessage extends BaseStreamMessage {
+  type: StreamMessageType.Connected;
+}
+
+export interface DoneMessage extends BaseStreamMessage {
+  type: StreamMessageType.Done;
+}
+
+export interface ToolStartMessage extends BaseStreamMessage {
+  type: StreamMessageType.ToolStart;
+  tool: string;
+  input: unknown;
+}
+
+export interface ToolEndMessage extends BaseStreamMessage {
+  type: StreamMessageType.ToolEnd;
+  tool: string;
+  output: unknown;
+}
+
+export type StreamMessage =
+  | TokenMessage
+  | ConnectedMessage
+  | ErrorMessage
+  | DoneMessage
+  | ToolStartMessage
+  | ToolEndMessage;
