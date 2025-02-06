@@ -4,8 +4,9 @@ import { Doc, Id } from "@/convex/_generated/dataModel";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "./ui/button";
 import { ArrowRight } from "lucide-react";
-import { ChatRequestBody } from "@/lib/types";
+import { ChatRequestBody, StreamMessageType } from "@/lib/types";
 import { createSSEParser } from "@/lib/createSSEParser";
+import { tool } from "@langchain/core/tools";
 
 interface ChatInterfaceProps {
   chatId: Id<"chats">;
@@ -100,6 +101,64 @@ function ChatInterface({ chatId, initialMessages }: ChatInterfaceProps) {
       await processStream(reader, async (chunk) => {
         // Parse the SSE Messages from the chunk
         const messages = parser.parse(chunk);
+
+        //Handle each message based on its type
+        for (const message of messages) {
+          switch (message.type) {
+            case StreamMessageType.Token:
+              //Handle streaming tokens (normal text response)
+              if ("token" in message) {
+                fullResponse += message.token;
+                setStreamedResponse(fullResponse);
+              }
+              break;
+
+            case StreamMessageType.ToolStart:
+              //Handle start of tool execution (e.g API calls, file operations)
+              if ("tool" in message) {
+                setCurrentTool({
+                  name: message.tool,
+                  input: message.input,
+                });
+                fullResponse = formatTerminalOutput(
+                  message.tool,
+                  message.input,
+                  "Processing..."
+                );
+                setStreamedResponse(fullResponse);
+              }
+              break;
+
+            case StreamMessageType.ToolEnd:
+              //Handle completion of the tool
+              if ("tool" in message && currentTool) {
+                //Replace the "Processing..." message to actual output
+                const lastTerminalIndex = fullResponse.lastIndexOf(
+                  '<div class="bg-[#1e1e1e]'
+                );
+                if (lastTerminalIndex !== -1) {
+                  (fullResponse = fullResponse.substring(0, lastTerminalIndex)),
+                    formatTerminalOutput(
+                      message.tool,
+                      currentTool.input,
+                      message.output
+                    );
+
+                  setStreamedResponse(fullResponse);
+                }
+                setCurrentTool(null);
+              }
+              break;
+
+            case StreamMessageType.Error:
+              if ("error" in message) {
+                throw new Error(message.error);
+              }
+              break;
+
+            case StreamMessageType.Done:
+          }
+        }
       });
 
       // ------END-------
