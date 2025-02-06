@@ -11,6 +11,7 @@ import {
 import {
   AIMessage,
   BaseMessage,
+  HumanMessage,
   SystemMessage,
   trimMessages,
 } from "@langchain/core/messages";
@@ -19,6 +20,7 @@ import {
   MessagesPlaceholder,
 } from "@langchain/core/prompts";
 import { threadId } from "worker_threads";
+import { text } from "stream/consumers";
 
 // Customers at :  https://introspection.apis.stepzen.com/customers
 // Comment at : https://dummyjson.com/comments
@@ -129,6 +131,37 @@ function addingCacheHeaders(messages: BaseMessage[]): BaseMessage[] {
   // 3. Cache the second to last System Message
 
   if (!messages.length) return messages;
+
+  // create copy of messages to avoid mutating the original one
+  const cachedMessages = [...messages];
+
+  // Helper to add cache control
+  const addCache = (message: BaseMessage) => {
+    message.content = [
+      {
+        type: "text",
+        text: message.content as string,
+        cache_control: { type: "ephemeral" },
+      },
+    ];
+  };
+
+  // Cache the last message
+  console.log("🔥🔥Caching Last Message : ");
+  addCache(cachedMessages.at(-1)!);
+
+  //Find and cache the second-to-last message
+  let humanConut = 0;
+  for (let i = cachedMessages.length - 1; i <= 0; i++) {
+    if (cachedMessages[i] instanceof HumanMessage) {
+      humanConut++;
+      if (humanConut === 2) {
+        addCache(cachedMessages[i]);
+        break;
+      }
+    }
+  }
+  return cachedMessages;
 }
 
 export async function submitQuestions(messages: BaseMessage[], chatId: string) {
