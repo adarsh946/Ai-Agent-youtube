@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "./ui/button";
 import { ArrowRight } from "lucide-react";
 import { ChatRequestBody } from "@/lib/types";
+import { createSSEParser } from "@/lib/createSSEParser";
 
 interface ChatInterfaceProps {
   chatId: Id<"chats">;
@@ -22,6 +23,21 @@ function ChatInterface({ chatId, initialMessages }: ChatInterfaceProps) {
   } | null>(null);
 
   const messageEndRef = useRef<HTMLDivElement>(null);
+
+  const processStream = async (
+    reader: ReadableStreamDefaultReader<Uint8Array>,
+    onchunk: (chunk: string) => Promise<void>
+  ) => {
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        await onchunk(new TextDecoder().decode(value));
+      }
+    } finally {
+      reader.releaseLock();
+    }
+  };
 
   useEffect(() => {
     messageEndRef?.current?.scrollIntoView({ behavior: "smooth" });
@@ -75,6 +91,18 @@ function ChatInterface({ chatId, initialMessages }: ChatInterfaceProps) {
       if (!response.body) throw new Error("no response body available");
 
       // handle the stream
+      // ------START-----
+
+      const parser = createSSEParser();
+      const reader = response.body.getReader();
+
+      // Process the Stream Chunk
+      await processStream(reader, async (chunk) => {
+        // Parse the SSE Messages from the chunk
+        const messages = parser.parse(chunk);
+      });
+
+      // ------END-------
     } catch (error) {
       //Handle the error during streaming
       console.error("Error in sending message : ", error);
