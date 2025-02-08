@@ -1,0 +1,55 @@
+"use client";
+
+import { BotIcon } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { useUser } from "@clerk/nextjs";
+
+interface messageBubbleProps {
+  content: string;
+  isUser?: boolean;
+}
+
+const formatMessage = (content: string): string => {
+  // First unescape backslashes
+  content = content.replace(/\\\\/g, "\\");
+
+  // then handle newlines
+  content = content.replace(/\\n/g, "\n");
+
+  //Remove only the markers and keep the content between them
+  content = content.replace(/---START---\n?/g, "").replace(/\n?---END---/g, "");
+
+  //Trim extra whitespace if left
+  return content.trim();
+};
+
+function MessageBubble({ content, isUser }: messageBubbleProps) {
+  const { user } = useUser();
+  return (
+    <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
+      <div
+        className={`rounded-2xl px-4 py-2.5 max-w-[85%] md:max-w-[75%] shadow-sm ring-1 ring-inset relative ${
+          isUser
+            ? "bg-blue-600 text-white rounded-br-none ring-blue-700"
+            : "bg-white text-gray-900 rounded-bl-none ring-gray-200"
+        }`}
+      >
+        <div className="whitespace-pre-wrap text-[15px] leading-relaxed">
+          <div dangerouslySetInnerHTML={{ __html: formatMessage(content) }} />
+        </div>
+
+        <div
+          className={`absolute bottom-0 ${isUser ? "bg-white text-gray-100" : "bg-blue-600 border-white"} flex items-center justify-center shadow-sm`}
+        >
+            {isUser ? (
+                <Avatar className="h-7 w-7">
+                    
+                </Avatar>
+            )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default MessageBubble;

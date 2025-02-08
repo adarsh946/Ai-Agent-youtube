@@ -7,6 +7,8 @@ import { ArrowRight } from "lucide-react";
 import { ChatRequestBody, StreamMessageType } from "@/lib/types";
 import { createSSEParser } from "@/lib/createSSEParser";
 import { tool } from "@langchain/core/tools";
+import { getConvexClient } from "@/lib/convex";
+import { api } from "@/convex/_generated/api";
 
 interface ChatInterfaceProps {
   chatId: Id<"chats">;
@@ -24,6 +26,33 @@ function ChatInterface({ chatId, initialMessages }: ChatInterfaceProps) {
   } | null>(null);
 
   const messageEndRef = useRef<HTMLDivElement>(null);
+
+  const formatToolOutput = (output : unknown) {
+    if (typeof output === "string") return output;
+    return JSON.stringify(output, null, 2)
+  }
+
+  const formatTerminalOutput = (
+    tool: string,
+    input: unknown,
+    output: unknown
+  ) => {
+    const terminalHtml = `<div class = "bg-[#1e1e1e] font-mono text-white p-2 rounded-md my-2 overflow-x-auto whitespace-normal max-w-[600px]">
+    <div class=" flex items-center gap-1.5 border-b border-gray-700 pb-1">
+    <span class = "text-red-500">○<span>
+    <span class = "text-yellow-500">○<span>
+    <span class = "text-green-500">○<span>
+    <span class = "text-gray-400 ml-1 text-sm">~/${tool}<span>
+    </div>
+    <div class = "text-gray-400 mt-1 > $ Input </div>
+    <pre class = "text-yellow-400 mt-0.5 whitespace-pre-wrap overflow-x-auto"> ${formatToolOutput(input)} </pre>
+    <div class = "text-gray-400 mt-2 > $ IOutput </div>
+    <pre class = "text-green-400 mt-0.5 whitespace-pre-wrap overflow-x-auto"> ${formatToolOutput(output)} </pre>
+</div>
+    `;
+
+    return `---START---\n${terminalHtml}\n---END---`;
+  };
 
   const processStream = async (
     reader: ReadableStreamDefaultReader<Uint8Array>,
@@ -155,8 +184,27 @@ function ChatInterface({ chatId, initialMessages }: ChatInterfaceProps) {
                 throw new Error(message.error);
               }
               break;
-
+            // handle completion of the entire response
             case StreamMessageType.Done:
+              const assistantMessage: Doc<"messages"> = {
+                _id: `temp_assistant_${Date.now()}`,
+                chatId,
+                content: fullResponse,
+                role: "assistant",
+                createdAt: Date.now(),
+              } as Doc<"messages">;
+
+              // Save the complete message to the database
+              const convex = getConvexClient();
+              await convex.mutation(api.messages.store, {
+                chatId,
+                content: fullResponse,
+                role: "assistant",
+              });
+
+              setMessages((prev) => [...prev, assistantMessage]);
+              setStreamedResponse("");
+              return;
           }
         }
       });
@@ -169,7 +217,17 @@ function ChatInterface({ chatId, initialMessages }: ChatInterfaceProps) {
       setMessages((prev) =>
         prev.filter((msg) => msg._id !== optimisticUserMessage._id)
       );
-      setStreamedResponse("error");
+      setStreamedResponse(
+        
+        formatTerminalOutput(
+          "error",
+          "Failed to process Input",
+          error instanceof Error ? error.message : "Unknown Error"
+        )
+
+      );
+    } finally{ 
+      setIsLoading(false)
     }
   };
 
