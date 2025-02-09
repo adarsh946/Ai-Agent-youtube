@@ -1,18 +1,48 @@
+// "use client";
+
+// import { createContext, useState } from "react";
+
+// interface NavigationProviderType {
+//   isMobileNavOpen: boolean;
+//   setIsMobileNavOpen: (open: boolean) => void;
+//   closeMobileNav: () => void;
+// }
+
+// export const NavigationCreateContext = createContext<NavigationProviderType>({
+//   isMobileNavOpen: false,
+//   setIsMobileNavOpen: () => {},
+//   closeMobileNav: () => {},
+// });
+
+// export function NavigationProvider({
+//   children,
+// }: {
+//   children: React.ReactNode;
+// }) {
+//   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+//   const closeMobileNav = () => setIsMobileNavOpen(false);
+//   return (
+//     <NavigationCreateContext
+//       value={{ isMobileNavOpen, setIsMobileNavOpen, closeMobileNav }}
+//     >
+//       <div>{children}</div>;
+//     </NavigationCreateContext>
+//   );
+// }
+
 "use client";
 
-import { createContext, useState } from "react";
+import { createContext, useState, useContext } from "react";
 
-interface NavigationProviderType {
+interface NavigationContextType {
   isMobileNavOpen: boolean;
   setIsMobileNavOpen: (open: boolean) => void;
   closeMobileNav: () => void;
 }
 
-export const NavigationCreateContext = createContext<NavigationProviderType>({
-  isMobileNavOpen: false,
-  setIsMobileNavOpen: () => {},
-  closeMobileNav: () => {},
-});
+const NavigationContext = createContext<NavigationContextType | undefined>(
+  undefined
+);
 
 export function NavigationProvider({
   children,
@@ -20,12 +50,22 @@ export function NavigationProvider({
   children: React.ReactNode;
 }) {
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+
   const closeMobileNav = () => setIsMobileNavOpen(false);
+
   return (
-    <NavigationCreateContext
+    <NavigationContext
       value={{ isMobileNavOpen, setIsMobileNavOpen, closeMobileNav }}
     >
-      <div>{children}</div>;
-    </NavigationCreateContext>
+      {children}
+    </NavigationContext>
   );
+}
+
+export function useNavigation() {
+  const context = useContext(NavigationContext);
+  if (context === undefined) {
+    throw new Error("useNavigation must be used within a NavigationProvider");
+  }
+  return context;
 }

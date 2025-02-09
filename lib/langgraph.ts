@@ -21,6 +21,7 @@ import {
 } from "@langchain/core/prompts";
 import { threadId } from "worker_threads";
 import { text } from "stream/consumers";
+import { SYSTEM_MESSAGE } from "@/constants/systemMessages";
 
 // Customers at :  https://introspection.apis.stepzen.com/customers
 // Comment at : https://dummyjson.com/comments
@@ -47,7 +48,7 @@ const toolNode = new ToolNode(tools);
 
 const initializeModel = () => {
   const chatModel = new ChatOpenAI({
-    model: "gpt-4o",
+    model: "gpt-4o-mini",
     apiKey: process.env.OPENAI_API_KEY,
     temperature: 0.7, // higher temperature for more creative responses.
     maxTokens: 4096, // higher tokens for long responses

@@ -23,7 +23,7 @@ const formatMessage = (content: string): string => {
   return content.trim();
 };
 
-function MessageBubble({ content, isUser }: messageBubbleProps) {
+export function MessageBubble({ content, isUser }: messageBubbleProps) {
   const { user } = useUser();
   return (
     <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
@@ -41,15 +41,19 @@ function MessageBubble({ content, isUser }: messageBubbleProps) {
         <div
           className={`absolute bottom-0 ${isUser ? "bg-white text-gray-100" : "bg-blue-600 border-white"} flex items-center justify-center shadow-sm`}
         >
-            {isUser ? (
-                <Avatar className="h-7 w-7">
-                    
-                </Avatar>
-            )}
+          {isUser ? (
+            <Avatar className="h-7 w-7">
+              <AvatarImage src={user?.imageUrl} />
+              <AvatarFallback>
+                {user?.firstName?.charAt(0)}
+                {user?.lastName?.charAt(0)}
+              </AvatarFallback>
+            </Avatar>
+          ) : (
+            <BotIcon className="h-5 w-5 text-white" />
+          )}
         </div>
       </div>
     </div>
   );
 }
-
-export default MessageBubble;
